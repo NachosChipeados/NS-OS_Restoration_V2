@@ -1,7 +1,0 @@
-{
-    "name": "OS_Restoration_V2",
-    "version_number":"2.0.0",
-    "website_url": "https://github.com/NachosChipeados/NS-OS_Restoration_V2",
-    "description": "Restores unused Titan OS voice lines. Based on the original OS Restoration mod by Fragyeeter.",
-    "dependencies": [""]
-}
