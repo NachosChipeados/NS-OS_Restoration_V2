@@ -1,0 +1,245 @@
+untyped
+
+global function TitanCockpit_PlayDialog
+global function ServerCallback_TitanFallWarning
+
+global function TitanCockpit_PlayDialogDelayed
+global function SCB_TitanDialogue
+
+function TitanCockpit_PlayDialogDelayed( entity player, delay, string conversationName )
+{
+	player.EndSignal( "OnDestroy" )
+	entity cockpit = player.GetCockpit()
+	if ( !IsValid( cockpit ) )
+		return
+
+	cockpit.EndSignal( "OnDestroy" )
+	wait delay
+	TitanCockpit_PlayDialog( player, conversationName )
+}
+
+function TitanCockpit_PlayDialog( entity player, string conversationName, bool generateOSAlias = true )
+{
+	if ( !IsConnected() ) //Awkward that this has to be checked. Persistence isn't available when we disconnect, but some OnThreadEnds still run trying to play a conversation. See bug 158861
+		return
+
+	if ( !ShouldPlayTitanCockpitDialogueIfPlayerIsNotTitan( player, conversationName ) )
+		return
+
+	if ( !IsAlive( player ) )
+		return
+
+	if ( player != GetLocalClientPlayer() )
+		return
+
+	if ( IsWatchingReplay() )
+		return
+
+	if ( player != GetLocalViewPlayer() )
+		return
+
+	if ( !player.IsTitan() && !IsAlive( player.GetPetTitan() )  ) //No titan to talk too, so bail out. For SP when BT talks to you via scripted moments this function isn't called anyway
+		return
+
+	#if SP
+	if ( !GetGlobalNetBool( "titanOSDialogueEnabled" ) )
+		return
+	#endif
+
+	if ( !GamePlayingOrSuddenDeath() )
+		return
+
+	if ( Time() - GetConversationLastPlayedTime( conversationName ) <= GetConversationDebounce( conversationName ) )
+	{
+		return
+	}
+
+	int priority = GetConversationPriority( conversationName )
+
+	string soundAlias
+
+	if ( generateOSAlias )
+		soundAlias = GenerateTitanOSAlias( player, conversationName )
+	else
+		soundAlias = conversationName
+
+	if ( ShouldPlayAlarmBeforeDialogue( player, conversationName ) )
+	{
+		thread TitanCockpit_PlayDialogAfterAlarm( player, conversationName, priority, soundAlias )
+		return
+	}
+
+	entity titan = player.GetPetTitan()
+	if ( IsAlive( titan ) ) //TODO: Should probably play on the soul instead of playing on the weapon. Next game.
+	{
+		entity weapon = titan.GetOffhandWeapon( OFFHAND_EQUIPMENT )
+		if ( IsValid( weapon ) )
+			PlayOneLinerConversationOnEntWithPriority( conversationName, soundAlias, weapon, priority )
+		else
+			PlayOneLinerConversationOnEntWithPriority( conversationName, soundAlias, player, priority )
+	}
+	else
+	{
+		PlayOneLinerConversationOnEntWithPriority( conversationName, soundAlias, player, priority )
+	}
+
+	//OS_Print( conversationName )
+}
+
+function ShouldPlayTitanCockpitDialogueIfPlayerIsNotTitan( entity player, string conversationName )
+{
+	if ( player.IsTitan() )
+		return true
+
+	switch( conversationName )
+	{
+		case "disembark":
+		case "manualEjectNotice":
+		case "autoEngageGrunt":
+		case "autoEngagePilot":
+		case "autoEngageTitan":
+		case "autoEngageTitans":
+		case "sonarPulse":
+			return true
+
+		// NEW
+		case "batteryGot":
+		case "batteryGotShieldActivated":
+		case "batteryGotShieldEnabled":
+		case "batteryNearDisembark":
+		case "batteryNearGeneric":
+		case "batteryStolenByPilot":
+		case "batteryStolenGnrc":
+		case "hostileLeftHull":
+		case "killEnemyRodeo":
+		case "killEnemyRodeoGnrc":
+			return true
+
+		default:
+			//printt( "Return false ShouldPlayTitanCockpitDialogueIfPlayerIsNotTitan" )
+			return false
+	}
+}
+
+function ShouldPlayAlarmBeforeDialogue( entity player, string conversationName )
+{
+	if ( !GetConVarBool( "OS.Enable_Betty_Alarm" ) )
+		return false
+
+	if ( !player.IsTitan() )
+		return false
+
+	if ( GetConVarBool( "OS.Force_Betty_Alarm" ) && conversationName != "bettyAlarm" )
+		return true
+
+	switch( conversationName )
+	{
+		case "autoEjectNotice":
+		case "briefCriticalDamage":
+		case "doomState":
+		case "doomEjectRec":
+		case "enemyTitanfall":
+		case "halfDoomState":
+		case "hostileTitanInbound":
+		case "multiTitanEngage":
+		case "outnumbered2to1":
+		case "outnumbered3to1":
+		case "outnumbered4to1":
+		case "rodeoWarning":
+		case "rodeoWarningGnrc":
+		case "warningEnemyPilot":
+		case "warningEnemyPilotMulti":
+
+		case "diag_sp_pilotLink_WD143a_07_01_mcor_bt":
+		case "diag_sp_fogBattle_BE401_01_01_mcor_bt":
+			return true
+		
+		default:
+			return false
+	}
+}
+
+function ServerCallback_TitanFallWarning( death )
+{
+	entity player = GetLocalClientPlayer()
+
+	if ( !player.IsTitan() )
+		return
+
+	if ( death )
+		TitanCockpit_PlayDialog( player, "enemyTitanfall" )
+	else
+	{
+		if ( IsSingleplayer() )
+		{
+			switch( RandomInt( 3 ) )
+			{
+				case 0:
+					TitanCockpit_PlayDialog( player, "hostileTitanInbound" )
+					break
+				case 1:
+					TitanCockpit_PlayDialog( player, "diag_sp_pilotLink_WD143a_07_01_mcor_bt", false )
+					break
+				case 2:
+					TitanCockpit_PlayDialog( player, "diag_sp_fogBattle_BE401_01_01_mcor_bt", false )
+					break
+			}
+		}
+		else
+			TitanCockpit_PlayDialog( player, "hostileTitanInbound" )
+	}
+}
+
+function SCB_TitanDialogue( voEnum )
+{
+	entity player = GetLocalClientPlayer()
+
+	if ( !player.IsTitan() )
+		return
+
+	string vo
+	switch ( voEnum )
+	{
+		case eTitanVO.RODEO_RAKE:
+			// Necessary because CodeCallback_TitanRiderEntVarChanged happens before the client knows the entity is dead.
+			vo = "killEnemyRodeo"
+			break
+
+		case eTitanVO.ENEMY_EJECTED:
+			vo = "ejectedEnemy"
+			break
+
+		case eTitanVO.FRIENDLY_EJECTED:
+			vo = "ejectedFriendly"
+			break
+
+		case eTitanVO.FRIENDLY_TITAN_DEAD:
+			vo = "elimFriendlyTitan"
+			break
+
+		case eTitanVO.ENEMY_TITAN_DEAD:
+			vo = "elimEnemyTitan"
+			break
+
+		case eTitanVO.PILOT_HELPING:
+			vo = "assistedByFriendlyPilot"
+			break
+
+		case eTitanVO.FRIENDLY_TITAN_HELPING:
+			vo = "assistedByFriendlyTitan"
+			break
+
+		case eTitanVO.ENEMY_TARGET_ELIMINATED:
+			vo = "elimTarget"
+			break
+
+		case eTitanVO.FRIENDLY_RODEOING_ENEMY:
+			vo = "friendlyRodeoOnEnemyTitan"
+			break
+
+		default:
+			printt( "Unknown titan vo enum " + voEnum )
+	}
+
+	TitanCockpit_PlayDialog( player, vo )
+}

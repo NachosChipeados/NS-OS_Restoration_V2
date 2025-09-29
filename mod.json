@@ -1,17 +1,76 @@
 {
-   "Name": "Example.Mod",
-   "Description": "A cool mod that does cool stuff",
-   "Version": "1.0.0",
-   "DownloadLink": "https://northstar.thunderstore.io/package/download/Example/Mod/",
-
-   "LoadPriority": 0,
-   "ConVars": [],
-   "Scripts": [{
-      "Path": "example.nut",
-      "RunOn": "(CLIENT || SERVER) && MP",
-      "ClientCallback": {
-         "Before":"example_callback"
-      }
-   }],
-   "Localisation": []
+	"Name": "Nachos.OS_Restoration_V2",
+	"Description": "Restores unused OS voice lines. Based on the original OS Restoration mod by Fragyeeter.",
+	"LoadPriority": 2,
+	"Version": "2.0.0",
+	"Scripts": [
+		{
+			"Path": "OS_Restoration.nut", //os_extension
+			"RunOn": "CLIENT",
+			"ClientCallback": {
+				"After": "OS_Init"
+			}
+		},
+		{
+			"Path": "OS_Restoration_Settings.nut",
+			"RunOn": "UI",
+			"UICallback": {
+				"Before": "OS_Settings_Init"
+			}
+		}
+	],
+	"ConVars":
+	[
+		{
+			"Name": "OS.Enable_Battery_Radar",
+			"DefaultValue": "1",
+			"Flags": 16777216
+		},
+		{
+			"Name": "OS.Enable_Battery_Received",
+			"DefaultValue": "1",
+			"Flags": 16777216
+		},
+		{
+			"Name": "OS.Enable_Core_Offline",
+			"DefaultValue": "1",
+			"Flags": 16777216
+		},
+		{
+			"Name": "OS.Enable_Disembark",
+			"DefaultValue": "1",
+			"Flags": 16777216
+		},
+//////////////////////////////////////////////////////////////////////////////
+		{
+			"Name": "OS.Enable_Betty_Alarm",
+			"DefaultValue": "1",
+			"Flags": 16777216
+		},
+		{
+			"Name": "OS.Force_Betty_Alarm",
+			"DefaultValue": "0",
+			"Flags": 16777216
+		},
+		{
+			"Name": "OS.Enable_Doom_Alarm",
+			"DefaultValue": "1",
+			"Flags": 16777216
+		},
+		{
+			"Name": "OS.Enable_Rodeo_Alarm",
+			"DefaultValue": "1",
+			"Flags": 16777216
+		},
+		{
+			"Name": "OS.Enable_Cockpit_Sparks",
+			"DefaultValue": "1",
+			"Flags": 16777216
+		},
+		{
+			"Name": "OS.Print",
+			"DefaultValue": "0",
+			"Flags": 16777216
+		}
+	]
 }
