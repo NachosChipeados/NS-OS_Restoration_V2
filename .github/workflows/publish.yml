@@ -41,7 +41,7 @@ jobs:
           # Package version to publish
           version: ${{ github.ref_name }} # This is the tag that was created in the release
           # Description of the mod
-          description: Restores unused OS voice lines. Based on the original OS Restoration mod by Fragyeeter. # <----------- UPDATE THIS
+          description: An overhaul of the original OS Restoration mod by Fragyeeter with various bug fixes, crash fixes and some new features. # <----------- UPDATE THIS
           # Thunderstore API token
           token: ${{ secrets.TS_KEY }} 
           # Directory to wrap the contents of the repo in

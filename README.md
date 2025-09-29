@@ -1,4 +1,4 @@
-An overhaul of the original [Os Restoration](https://thunderstore.io/c/northstar/p/Northstar_Archive/OS_Restoration/) mod by Fragyeeter with various bug fixes, crash fixes and some new features.
+An overhaul of the original [OS Restoration](https://thunderstore.io/c/northstar/p/Northstar_Archive/OS_Restoration/) mod by Fragyeeter with various bug fixes, crash fixes and some new features.
 
 # Original features
 
